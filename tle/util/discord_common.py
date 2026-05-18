@@ -141,15 +141,16 @@ async def presence(bot: Any) -> None:
 
     @tasks.task(name='OrzUpdate', waiter=tasks.Waiter.fixed_delay(10 * 60))
     async def presence_task(_: Any) -> None:
-        target = random.choice(
-            [
-                member
-                for member in bot.get_all_members()
-                if not has_role(member, constants.TLE_PURGATORY)
-            ]
-        )
+        # target = random.choice(
+        #     [
+        #         member.display_name
+        #         for member in bot.get_all_members()
+        #         if not has_role(member, constants.TLE_PURGATORY)
+        #     ]
+        # )
+        target = "enya chen "
         await bot.change_presence(
-            activity=discord.Game(name=f'{target.display_name} orz')
+            activity=discord.Game(name=f'{target} orz')
         )
 
     presence_task.start()
