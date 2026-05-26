@@ -17,8 +17,9 @@ from tle.util.cache import ContestNotFound, ProblemsetNotCached
 from tle.util.db.user_db_conn import Gitgud
 
 _GITGUD_NO_SKIP_TIME = 3 * 60 * 60
-_GITGUD_SCORE_DISTRIB = (1, 2, 3, 5, 8, 12, 17, 23, 25)
+_GITGUD_SCORE_DISTRIB = (1, 1, 1, 1, 1, 2, 2, 2, 3, 5, 8, 12, 17, 23, 29, 35, 42, 49, 57, 65, 75)
 _GITGUD_MAX_ABS_DELTA_VALUE = 1000
+_GITGUD_SCORE_TABLE: str
 
 
 class CodeforcesCogError(commands.CommandError):
@@ -29,6 +30,12 @@ class Codeforces(commands.Cog):
     def __init__(self, bot: commands.Bot) -> None:
         self.bot = bot
         self.converter = commands.MemberConverter()
+
+        parts = ["delta | points\n--------------\n"]
+        for i in range (_GITGUD_MAX_ABS_DELTA_VALUE, -_GITGUD_MAX_ABS_DELTA_VALUE - 100, -100):
+            parts.append("{:>5}".format(('+' if i > 0 else '') + str(i)) + " | " + str(_GITGUD_SCORE_DISTRIB[(_GITGUD_MAX_ABS_DELTA_VALUE + i) // 100]) + "\n")
+
+        _GITGUD_SCORE_TABLE = "".join(parts)
 
     async def _validate_gitgud_status(
         self, ctx: commands.Context, delta: int | None
@@ -72,10 +79,8 @@ class Codeforces(commands.Cog):
     @commands.hybrid_command(brief='Upsolve a problem')
     @cf_common.user_guard(group='gitgud')
     async def upsolve(self, ctx: commands.Context, choice: int = -1) -> None:
-        """Request an unsolved problem from a contest you participated in
-        delta  -1000 | -300 | -200 | -100 |  0  | +100 | +200 | +300 | +1000
-        points    1  |   2  |   3  |   5  |  8  |  12  |  17  |  23  |   25
-        """
+        "Request an unsolved problem from a contest you participated in\n" + _GITGUD_SCORE_TABLE
+
         await self._validate_gitgud_status(ctx, delta=None)
         (handle,) = await cf_common.resolve_handles(
             ctx, self.converter, ('!' + str(ctx.author),)
@@ -290,10 +295,8 @@ class Codeforces(commands.Cog):
     @commands.hybrid_command(brief='Challenge')
     @cf_common.user_guard(group='gitgud')
     async def gitgud(self, ctx: commands.Context, delta: int = 0) -> None:
-        """Request a problem for gitgud points.
-        delta  -1000 | -300 | -200 | -100 |  0  | +100 | +200 | +300 | +1000
-        points    1  |   2  |   3  |   5  |  8  |  12  |  17  |  23  |   25
-        """
+        "Request a problem for gitgud points\n" + _GITGUD_SCORE_TABLE
+        
         await self._validate_gitgud_status(ctx, delta)
         (handle,) = await cf_common.resolve_handles(
             ctx, self.converter, ('!' + str(ctx.author),)
@@ -350,7 +353,7 @@ class Codeforces(commands.Cog):
             line = f'[{name}]({problem.url})\N{EN SPACE}[{problem.rating}]'
             if finish:
                 time_str = cf_common.days_ago(finish)
-                points = f'{_GITGUD_SCORE_DISTRIB[max(min(delta, 400), -400) // 100 + 4]:+}'
+                points = f'{_GITGUD_SCORE_DISTRIB[(_GITGUD_MAX_ABS_DELTA_VALUE + delta) // 100]:+}'
                 line += f'\N{EN SPACE}{time_str}\N{EN SPACE}[{points}]'
             return line
 
@@ -395,7 +398,7 @@ class Codeforces(commands.Cog):
         if name not in solved:
             raise CodeforcesCogError("You haven't completed your challenge.")
 
-        delta = _GITGUD_SCORE_DISTRIB[max(min(delta, 400), -400) // 100 + 4]
+        delta = _GITGUD_SCORE_DISTRIB[(_GITGUD_MAX_ABS_DELTA_VALUE + delta) // 100]
         finish_time = int(datetime.datetime.now().timestamp())
         rc = await self.bot.user_db.complete_challenge(
             user_id, challenge_id, finish_time, delta
