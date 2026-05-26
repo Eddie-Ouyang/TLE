@@ -31,11 +31,11 @@ class Codeforces(commands.Cog):
         self.bot = bot
         self.converter = commands.MemberConverter()
 
-        parts = ["delta | points\n--------------\n"]
+        parts = ["delta | points","--------------"]
         for i in range (_GITGUD_MAX_ABS_DELTA_VALUE, -_GITGUD_MAX_ABS_DELTA_VALUE - 100, -100):
-            parts.append("{:>5}".format(('+' if i > 0 else '') + str(i)) + " | " + str(_GITGUD_SCORE_DISTRIB[(_GITGUD_MAX_ABS_DELTA_VALUE + i) // 100]) + "\n")
+            parts.append("{:>5}".format(('+' if i > 0 else '') + str(i)) + " | " + str(_GITGUD_SCORE_DISTRIB[(_GITGUD_MAX_ABS_DELTA_VALUE + i) // 100]))
 
-        _GITGUD_SCORE_TABLE = "".join(parts)
+        _GITGUD_SCORE_TABLE = "\n".join(parts)
 
     async def _validate_gitgud_status(
         self, ctx: commands.Context, delta: int | None
